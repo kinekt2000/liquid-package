@@ -1,0 +1,9 @@
+{
+    "liquid-package.dynamic_models": "Liquid Package Models",
+    "liquid-package.dynamic_models.description": "Special runtime generated models for Liquid Package mod ",
+    "creativemodetab.liquid-package.tabname": "Liquid Package all Items",
+    "block.liquid-package.sublimator": "Sublimator",
+    "item.liquid-package.empty_shell": "Empty Shell",
+    "item.liquid-package.packed_shell": "Packed Shell",
+    "item.liquid-package.unknown_fluid": "Unknown fluid"
+}

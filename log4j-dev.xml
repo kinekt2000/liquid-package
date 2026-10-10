@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+ <Appenders>
+    <!-- Standard System.out Console Appender used by Fabric/Minecraft -->
+    <Console name="SysOut" target="SYSTEM_OUT">
+      <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level] (%logger{1}): %msg%n"/>
+    </Console>
+    <Console name="ServerGuiConsole" target="SYSTEM_OUT">
+      <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level] (%logger{1}): %msg%n"/>
+    </Console>
+  </Appenders>
+
+  <Loggers>
+    <Root level="debug">
+      <AppenderRef ref="SysOut"/>
+      <AppenderRef ref="ServerGuiConsole"/>
+    </Root>
+  </Loggers>
+</Configuration>

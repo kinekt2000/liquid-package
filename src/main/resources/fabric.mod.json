@@ -1,0 +1,42 @@
+{
+	"schemaVersion": 1,
+	"id": "liquid-package",
+	"version": "${version}",
+	"name": "Liquid Package",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/liquid-package/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.liquidpackage.LiquidPackage"
+		],
+		"client": [
+			"com.liquidpackage.client.LiquidPackageClient"
+		],
+		"fabric-datagen": [
+			"com.liquidpackage.LiquidPackageDataGen",
+			"com.liquidpackage.client.LiquidPackageDataGenClient"
+		]
+	},
+	"mixins": [
+		"liquid-package.mixins.json",
+		{
+			"config": "liquid-package.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

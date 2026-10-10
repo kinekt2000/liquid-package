@@ -1,0 +1,124 @@
+{
+  "variants": {
+    "facing=east,heat_state=cold,lit=false": {
+      "model": "liquid-package:block/sublimator_cold_unlit",
+      "y": 90
+    },
+    "facing=east,heat_state=cold,lit=true": {
+      "model": "liquid-package:block/sublimator_cold_lit",
+      "y": 90
+    },
+    "facing=east,heat_state=cool,lit=false": {
+      "model": "liquid-package:block/sublimator_cool_unlit",
+      "y": 90
+    },
+    "facing=east,heat_state=cool,lit=true": {
+      "model": "liquid-package:block/sublimator_cool_lit",
+      "y": 90
+    },
+    "facing=east,heat_state=hot,lit=false": {
+      "model": "liquid-package:block/sublimator_hot_unlit",
+      "y": 90
+    },
+    "facing=east,heat_state=hot,lit=true": {
+      "model": "liquid-package:block/sublimator_hot_lit",
+      "y": 90
+    },
+    "facing=east,heat_state=warm,lit=false": {
+      "model": "liquid-package:block/sublimator_warm_unlit",
+      "y": 90
+    },
+    "facing=east,heat_state=warm,lit=true": {
+      "model": "liquid-package:block/sublimator_warm_lit",
+      "y": 90
+    },
+    "facing=north,heat_state=cold,lit=false": {
+      "model": "liquid-package:block/sublimator_cold_unlit"
+    },
+    "facing=north,heat_state=cold,lit=true": {
+      "model": "liquid-package:block/sublimator_cold_lit"
+    },
+    "facing=north,heat_state=cool,lit=false": {
+      "model": "liquid-package:block/sublimator_cool_unlit"
+    },
+    "facing=north,heat_state=cool,lit=true": {
+      "model": "liquid-package:block/sublimator_cool_lit"
+    },
+    "facing=north,heat_state=hot,lit=false": {
+      "model": "liquid-package:block/sublimator_hot_unlit"
+    },
+    "facing=north,heat_state=hot,lit=true": {
+      "model": "liquid-package:block/sublimator_hot_lit"
+    },
+    "facing=north,heat_state=warm,lit=false": {
+      "model": "liquid-package:block/sublimator_warm_unlit"
+    },
+    "facing=north,heat_state=warm,lit=true": {
+      "model": "liquid-package:block/sublimator_warm_lit"
+    },
+    "facing=south,heat_state=cold,lit=false": {
+      "model": "liquid-package:block/sublimator_cold_unlit",
+      "y": 180
+    },
+    "facing=south,heat_state=cold,lit=true": {
+      "model": "liquid-package:block/sublimator_cold_lit",
+      "y": 180
+    },
+    "facing=south,heat_state=cool,lit=false": {
+      "model": "liquid-package:block/sublimator_cool_unlit",
+      "y": 180
+    },
+    "facing=south,heat_state=cool,lit=true": {
+      "model": "liquid-package:block/sublimator_cool_lit",
+      "y": 180
+    },
+    "facing=south,heat_state=hot,lit=false": {
+      "model": "liquid-package:block/sublimator_hot_unlit",
+      "y": 180
+    },
+    "facing=south,heat_state=hot,lit=true": {
+      "model": "liquid-package:block/sublimator_hot_lit",
+      "y": 180
+    },
+    "facing=south,heat_state=warm,lit=false": {
+      "model": "liquid-package:block/sublimator_warm_unlit",
+      "y": 180
+    },
+    "facing=south,heat_state=warm,lit=true": {
+      "model": "liquid-package:block/sublimator_warm_lit",
+      "y": 180
+    },
+    "facing=west,heat_state=cold,lit=false": {
+      "model": "liquid-package:block/sublimator_cold_unlit",
+      "y": 270
+    },
+    "facing=west,heat_state=cold,lit=true": {
+      "model": "liquid-package:block/sublimator_cold_lit",
+      "y": 270
+    },
+    "facing=west,heat_state=cool,lit=false": {
+      "model": "liquid-package:block/sublimator_cool_unlit",
+      "y": 270
+    },
+    "facing=west,heat_state=cool,lit=true": {
+      "model": "liquid-package:block/sublimator_cool_lit",
+      "y": 270
+    },
+    "facing=west,heat_state=hot,lit=false": {
+      "model": "liquid-package:block/sublimator_hot_unlit",
+      "y": 270
+    },
+    "facing=west,heat_state=hot,lit=true": {
+      "model": "liquid-package:block/sublimator_hot_lit",
+      "y": 270
+    },
+    "facing=west,heat_state=warm,lit=false": {
+      "model": "liquid-package:block/sublimator_warm_unlit",
+      "y": 270
+    },
+    "facing=west,heat_state=warm,lit=true": {
+      "model": "liquid-package:block/sublimator_warm_lit",
+      "y": 270
+    }
+  }
+}

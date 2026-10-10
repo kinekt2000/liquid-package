@@ -1,0 +1,7 @@
+{
+  "sources": [
+    {
+      "type": "liquid-package:fluid_shell"
+    }
+  ]
+}

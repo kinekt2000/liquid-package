@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "bottom": "liquid-package:block/sublimator_bottom",
+    "front": "liquid-package:block/sublimator_front_hot",
+    "side": "liquid-package:block/sublimator_side",
+    "top": "liquid-package:block/sublimator_top_lit"
+  }
+}
