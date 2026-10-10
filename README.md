@@ -1,10 +1,11 @@
 ![Mod-Logo](./docs/logo.png)
-
 # Liquid Package
+
+[Modrinth Page](https://modrinth.com/mod/liquid-package)
 
 ## Overview
 
-Installed mod with some greate fuel but oh no they are liquid.
+Installed mod with some great fuel but, oh no, they are liquid.
 This mod will help you to compress them into solid items.
 
 Mod adds Sublimator block and Empty Shell item. Configure you mod, pour some fluids in Sublimator, add Empty Shell and let magic do the thing. After sublimation process you'll get solid packed fuel.
