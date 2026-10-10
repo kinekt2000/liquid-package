@@ -4,6 +4,24 @@ plugins {
 }
 
 repositories {
+	maven {
+		name = "BlameJared"
+		url = "https://maven.blamejared.com/"
+		content { includeGroup "mezz.jei" }
+	}
+	maven {
+		name = "Architectury"
+		url = "https://maven.architectury.dev/"
+		content { includeGroup "dev.architectury" }
+	}
+	maven {
+		name = "Shedaniel"
+		url = "https://maven.shedaniel.me/"
+		content {
+			includeGroup "me.shedaniel"
+			includeGroup "me.shedaniel.cloth"
+		}
+	}
 	// Add repositories to retrieve artifacts from in here.
 	// You should only use this when depending on other mods because
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
@@ -45,6 +63,16 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// JEI integration (client side, optional at runtime)
+	clientCompileOnly "mezz.jei:jei-${project.minecraft_version}-common-api:${project.jei_version}"
+	clientCompileOnly "mezz.jei:jei-${project.minecraft_version}-fabric-api:${project.jei_version}"
+
+	// REI integration (client side, optional at runtime)
+	clientCompileOnly "me.shedaniel:RoughlyEnoughItems-api-fabric:${project.rei_version}"
+	clientCompileOnly "me.shedaniel:RoughlyEnoughItems-default-plugin-fabric:${project.rei_version}"
+	clientCompileOnly "me.shedaniel.cloth:basic-math:0.6.1"
+	clientCompileOnly "dev.architectury:architectury-fabric:21.0.2"
 }
 
 processResources {

@@ -21,18 +21,17 @@
 		"client": [
 			"com.liquidpackage.client.LiquidPackageClient"
 		],
+		"jei_mod_plugin": [
+			"com.liquidpackage.client.jei.LiquidPackageJeiPlugin"
+		],
+		"rei_client": [
+			"com.liquidpackage.client.rei.LiquidPackageReiPlugin"
+		],
 		"fabric-datagen": [
 			"com.liquidpackage.LiquidPackageDataGen",
 			"com.liquidpackage.client.LiquidPackageDataGenClient"
 		]
 	},
-	"mixins": [
-		"liquid-package.mixins.json",
-		{
-			"config": "liquid-package.client.mixins.json",
-			"environment": "client"
-		}
-	],
 	"depends": {
 		"fabricloader": ">=0.19.5",
 		"minecraft": "~26.2",

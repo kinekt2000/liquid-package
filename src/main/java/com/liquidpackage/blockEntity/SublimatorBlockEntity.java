@@ -5,9 +5,18 @@ import org.jspecify.annotations.Nullable;
 import com.liquidpackage.LiquidPackage;
 import com.liquidpackage.blockEntity.container.iface.ContainerDataEnum;
 import com.liquidpackage.blocks.SublimatorBlock;
+import com.liquidpackage.items.ItemsLib;
+import com.liquidpackage.items.ItemsLib.GenericShellBundle;
 import com.liquidpackage.menu.sublimator.SublimatorMenu;
 
+import java.util.List;
+
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+import net.fabricmc.fabric.api.transfer.v1.item.ContainerStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.CombinedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.FilteringStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
@@ -15,7 +24,9 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
@@ -40,7 +51,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
-public class SublimatorBlockEntity extends BlockEntity implements ExtendedMenuProvider<BlockPos> {
+public class SublimatorBlockEntity extends BlockEntity
+        implements ExtendedMenuProvider<BlockPos>, SidedStorageBlockEntity {
     public static final int INPUT_BUCKET = 0;
     public static final int INPUT_SHELL = 1;
     public static final int OUTPUT_SHELL = 2;
@@ -69,16 +81,7 @@ public class SublimatorBlockEntity extends BlockEntity implements ExtendedMenuPr
                 return getItemFluidStorage(itemStack) != null;
             }
             if (slot == INPUT_SHELL) {
-                ItemStack currentInSlot = this.getItem(INPUT_SHELL);
-
-                if (currentInSlot.isEmpty()) {
-                    return true;
-                }
-
-                boolean isSameType = ItemStack.isSameItemSameComponents(currentInSlot, itemStack);
-                boolean hasSpace = currentInSlot.getCount() < currentInSlot.getMaxStackSize();
-
-                return isSameType && hasSpace;
+                return itemStack.is(ItemsLib.EMPTY_SHELL.item());
             }
 
             return false;
@@ -92,9 +95,19 @@ public class SublimatorBlockEntity extends BlockEntity implements ExtendedMenuPr
             return FluidVariant.blank();
         }
 
+        /**
+         * Only fluids that make a shell are accepted, anything else would clog the tank
+         * for good.
+         */
+        @Override
+        protected boolean canInsert(FluidVariant variant) {
+            return !variant.isBlank()
+                    && ItemsLib.getGenericByLiquid(BuiltInRegistries.FLUID.getKey(variant.getFluid())) != null;
+        }
+
         @Override
         protected long getCapacity(FluidVariant variant) {
-            return FluidConstants.BUCKET * 4;
+            return TANK_CAPACITY;
         }
 
         @Override
@@ -106,10 +119,19 @@ public class SublimatorBlockEntity extends BlockEntity implements ExtendedMenuPr
         };
     };
 
+    private static final long TANK_CAPACITY = FluidConstants.BUCKET * 4;
+
+    /** Crafting takes this many ticks per bucket of the shell's cost. */
+    public static final int TICKS_PER_BUCKET = 20;
+    /** The cost is drained evenly over the whole craft. */
+    private static final long FLUID_PER_TICK = FluidConstants.BUCKET / TICKS_PER_BUCKET;
+
     private static final int MAX_PROGRESS_DEFAULT = 72;
     private final ContainerData blockStatus;
 
     private int progress = 0;
+    /** Config index of the shell being crafted, -1 when idle. */
+    private int craftingIndex = -1;
     private int maxProgress = MAX_PROGRESS_DEFAULT;
     private int heatPercent = 0;
 
@@ -161,6 +183,41 @@ public class SublimatorBlockEntity extends BlockEntity implements ExtendedMenuPr
         return fluidStorage;
     }
 
+    // Pipes and hoppers (Fabric Transfer API)
+    private final ContainerStorage containerStorage = ContainerStorage.of(itemInventory, null);
+
+    private Storage<ItemVariant> shellInputStorage() {
+        return FilteringStorage.insertOnlyOf(containerStorage.getSlot(INPUT_SHELL));
+    }
+
+    private Storage<ItemVariant> shellOutputStorage() {
+        return FilteringStorage.extractOnlyOf(containerStorage.getSlot(OUTPUT_SHELL));
+    }
+
+    /**
+     * Sides are relative to the machine: its front is the facing direction and
+     * left/right are seen from the machine's own point of view. Empty shells go
+     * in from the back, filled shells come out of the left and right sides.
+     */
+    @Override
+    public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+        if (side == null)
+            return new CombinedStorage<>(List.of(shellInputStorage(), shellOutputStorage()));
+
+        Direction facing = getBlockState().getValue(SublimatorBlock.FACING);
+        if (side == facing.getOpposite())
+            return shellInputStorage();
+        if (side == facing.getCounterClockWise() || side == facing.getClockWise())
+            return shellOutputStorage();
+        return null;
+    }
+
+    /** Fluid goes in from the top only and cannot be pumped back out. */
+    @Override
+    public @Nullable Storage<FluidVariant> getFluidStorage(@Nullable Direction side) {
+        return side == null || side == Direction.UP ? FilteringStorage.insertOnlyOf(fluidStorage) : null;
+    }
+
     @Override
     public Component getDisplayName() {
         return Component.translatable("block.liquid-package.sublimator");
@@ -182,6 +239,7 @@ public class SublimatorBlockEntity extends BlockEntity implements ExtendedMenuPr
 
         output.putInt("sublimator.progress", progress);
         output.putInt("sublimator.maxProgress", maxProgress);
+        output.putInt("sublimator.craftingIndex", craftingIndex);
 
         ContainerHelper.saveAllItems(output, this.itemInventory.getItems());
         output.store("sublimator.fluidType", FluidVariant.CODEC, this.fluidStorage.variant);
@@ -194,6 +252,7 @@ public class SublimatorBlockEntity extends BlockEntity implements ExtendedMenuPr
 
         progress = input.getIntOr("sublimator.progress", progress);
         maxProgress = input.getIntOr("sublimator.maxProgress", maxProgress);
+        craftingIndex = input.getIntOr("sublimator.craftingIndex", -1);
 
         // ContainerHelper.loadAllItems(input, in ventory);
         ContainerHelper.loadAllItems(input, this.itemInventory.getItems());
@@ -219,31 +278,11 @@ public class SublimatorBlockEntity extends BlockEntity implements ExtendedMenuPr
         else
             decreaseHeat();
 
-        updateState(pos, state);
+        boolean working = heatPercent >= 100 && progressCrafting();
+        updateBlockState(working);
 
-        if (state.getValue(SublimatorBlock.HEAT_STATE) != SublimatorBlock.HeatState.HOT)
-            return;
-
-        state.setValue(SublimatorBlock.LIT, false);
-        // heatPercent = (heatPercent + 1) % 100;
-        // maxProgress = MAX_PROGRESS_DEFAULT;
-        // progress = (progress + 1) % maxProgress;
-
-        // progressCrafting();
-        // if (hasCraftingFinished())
-        // resetProgress();
-
-        // if (hasReciepe() && isOutputSlotAvailable()) {
-        // progressCrafting();
-        setChanged(level, pos, state);
-
-        // if (hasCraftingFinished()) {
-        // craftItem();
-        // resetProgress();
-        // }
-        // } else {
-        // resetProgress();
-        // }
+        if (working)
+            setChanged(level, pos, state);
     }
 
     public void increaseHeat() {
@@ -254,15 +293,24 @@ public class SublimatorBlockEntity extends BlockEntity implements ExtendedMenuPr
         heatPercent = heatPercent > 0 ? heatPercent - 1 : 0;
     }
 
-    public void updateState(BlockPos pos, BlockState state) {
+    private SublimatorBlock.HeatState heatState() {
         if (heatPercent < 33)
-            level.setBlockAndUpdate(pos, state.setValue(SublimatorBlock.HEAT_STATE, SublimatorBlock.HeatState.COLD));
-        else if (heatPercent < 66)
-            level.setBlockAndUpdate(pos, state.setValue(SublimatorBlock.HEAT_STATE, SublimatorBlock.HeatState.COOL));
-        else if (heatPercent < 100)
-            level.setBlockAndUpdate(pos, state.setValue(SublimatorBlock.HEAT_STATE, SublimatorBlock.HeatState.WARM));
-        else if (heatPercent >= 100)
-            level.setBlockAndUpdate(pos, state.setValue(SublimatorBlock.HEAT_STATE, SublimatorBlock.HeatState.HOT));
+            return SublimatorBlock.HeatState.COLD;
+        if (heatPercent < 66)
+            return SublimatorBlock.HeatState.COOL;
+        if (heatPercent < 100)
+            return SublimatorBlock.HeatState.WARM;
+        return SublimatorBlock.HeatState.HOT;
+    }
+
+    /** Heat and lit state of the block, written only when something changed. */
+    private void updateBlockState(boolean lit) {
+        BlockState current = level.getBlockState(worldPosition);
+        BlockState next = current
+                .setValue(SublimatorBlock.HEAT_STATE, heatState())
+                .setValue(SublimatorBlock.LIT, lit);
+        if (next != current)
+            level.setBlockAndUpdate(worldPosition, next);
     }
 
     public boolean isBurningBlockBelow() {
@@ -325,56 +373,87 @@ public class SublimatorBlockEntity extends BlockEntity implements ExtendedMenuPr
         }
     }
 
-    // private boolean hasReciepe() {
-    // // TODO MAKE IT READ ACTUAL RECIEPE
-    // ItemStack output = new ItemStack(ItemsLib.EMPTY_SHELL.item());
-    // Item input = ItemsLib.EMPTY_SHELL.item();
+    private static int bucketsOf(GenericShellBundle recipe) {
+        return Math.max(1, LiquidPackage.CONFIG.get(recipe.index()).liquidPerPackage());
+    }
 
-    // boolean isInputCorrect = inventory.get(INPUT_SHELL).is(input);
-    // boolean isOutputAppropriate = inventory.get(OUTPUT_SHELL).isEmpty()
-    // || inventory.get(OUTPUT_SHELL).is(output.getItem());
-    // boolean isThereOutputSpace = isThereOutputSpaceFor(output.getCount());
+    private void resetCrafting() {
+        progress = 0;
+        craftingIndex = -1;
+        maxProgress = MAX_PROGRESS_DEFAULT;
+    }
 
-    // return isInputCorrect && isOutputAppropriate && isThereOutputSpace;
-    // }
+    /**
+     * Cancels the current craft and empties the tank. The shells in the slots stay.
+     */
+    public void resetMachine() {
+        resetCrafting();
+        fluidStorage.amount = 0;
+        fluidStorage.variant = FluidVariant.blank();
+        setChanged();
+    }
 
-    // private boolean isThereOutputSpaceFor(int count) {
-    // int maxCount = inventory.get(OUTPUT_SHELL).isEmpty() ? 64 :
-    // inventory.get(OUTPUT_SHELL).getMaxStackSize();
-    // int currentCount = inventory.get(OUTPUT_SHELL).getCount();
+    private boolean outputAccepts(GenericShellBundle recipe) {
+        ItemStack output = itemInventory.getItem(OUTPUT_SHELL);
+        return output.isEmpty() || (output.is(recipe.item()) && output.getCount() < output.getMaxStackSize());
+    }
 
-    // return maxCount >= currentCount + count;
-    // }
+    /**
+     * One tick of crafting. The fluid is drained gradually, so the player has
+     * to keep the tank topped up for expensive shells. Running out of fluid or
+     * output space only pauses the craft; changing the shell or the fluid
+     * type cancels it.
+     *
+     * @return true when the craft advanced this tick
+     */
+    private boolean progressCrafting() {
+        if (!itemInventory.getItem(INPUT_SHELL).is(ItemsLib.EMPTY_SHELL.item())) {
+            resetCrafting();
+            return false;
+        }
 
-    // private void craftItem() {
-    // // TODO CHANGE IT TO GENERATE APPROPRIATE SHELL
-    // ItemStack output = new ItemStack(ItemsLib.EMPTY_SHELL.item());
-    // inventory.set(INPUT_SHELL,
-    // inventory.get(INPUT_SHELL).copyWithCount(inventory.get(INPUT_SHELL).getCount()
-    // - 1));
-    // inventory.set(OUTPUT_SHELL,
-    // output.copyWithCount(inventory.get(OUTPUT_SHELL).getCount() +
-    // output.getCount()));
-    // }
+        boolean tankDry = fluidStorage.variant.isBlank();
+        GenericShellBundle recipe = tankDry
+                ? null
+                : ItemsLib.getGenericByLiquid(BuiltInRegistries.FLUID.getKey(fluidStorage.variant.getFluid()));
 
-    // private boolean isOutputSlotAvailable() {
-    // return inventory.get(OUTPUT_SHELL).isEmpty() ||
-    // inventory.get(OUTPUT_SHELL).getCount() <
-    // inventory.get(OUTPUT_SHELL).getMaxStackSize();
-    // }
+        if (recipe == null) {
+            // Dry tank: wait for a refill. Anything else cannot be crafted.
+            if (!tankDry)
+                resetCrafting();
+            return false;
+        }
+        if (craftingIndex != -1 && craftingIndex != recipe.index())
+            resetCrafting();
 
-    // private void progressCrafting() {
-    // progress++;
-    // }
+        if (!outputAccepts(recipe) || fluidStorage.amount < FLUID_PER_TICK)
+            return false;
 
-    // private boolean hasCraftingFinished() {
-    // return progress >= maxProgress;
-    // }
+        fluidStorage.amount -= FLUID_PER_TICK;
+        if (fluidStorage.amount <= 0) {
+            fluidStorage.amount = 0;
+            fluidStorage.variant = FluidVariant.blank();
+        }
 
-    // private void resetProgress() {
-    // progress = 0;
-    // maxProgress = MAX_PROGRESS_DEFAULT;
-    // }
+        craftingIndex = recipe.index();
+        maxProgress = bucketsOf(recipe) * TICKS_PER_BUCKET;
+        progress++;
+        if (progress >= maxProgress) {
+            craft(recipe);
+            resetCrafting();
+        }
+        return true;
+    }
+
+    private void craft(GenericShellBundle recipe) {
+        itemInventory.getItem(INPUT_SHELL).shrink(1);
+
+        ItemStack output = itemInventory.getItem(OUTPUT_SHELL);
+        if (output.isEmpty())
+            itemInventory.setItem(OUTPUT_SHELL, new ItemStack(recipe.item()));
+        else
+            output.grow(1);
+    }
 
     // Block-Entity sync methods
     @Override

@@ -10,6 +10,8 @@ import net.fabricmc.fabric.api.transfer.v1.client.fluid.FluidVariantRendering;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
@@ -22,6 +24,8 @@ import net.minecraft.world.level.material.Fluids;
 public class SublimatorScreen extends AbstractContainerScreen<SublimatorMenu> {
     private static final int SCREEN_WIDTH = 176;
     private static final int SCREEN_HEIGHT = 184;
+
+    private static final float RESET_TEXT_SCALE = 0.75f;
 
     private static final Identifier TX_BACKGROUND = LiquidPackage.id("textures/gui/sublimator/sublimator.png");
     private static final Identifier TX_ARROW = LiquidPackage.id("textures/gui/sublimator/arrow.png");
@@ -37,6 +41,14 @@ public class SublimatorScreen extends AbstractContainerScreen<SublimatorMenu> {
         super.init();
         this.titleLabelY = 6;
         this.inventoryLabelY = 91;
+
+        Button reset = new ScaledTextButton(leftPos + 127, topPos + 85, 31, 10,
+                Component.translatable("liquid-package.gui.reset"),
+                button -> minecraft.gameMode.handleInventoryButtonClick(menu.containerId,
+                        SublimatorMenu.BUTTON_RESET),
+                RESET_TEXT_SCALE);
+        reset.setTooltip(Tooltip.create(Component.translatable("liquid-package.gui.reset.tooltip")));
+        addRenderableWidget(reset);
     }
 
     @Override

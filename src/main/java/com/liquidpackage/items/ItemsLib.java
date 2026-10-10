@@ -7,6 +7,8 @@ import java.util.function.Function;
 import com.liquidpackage.LiquidPackage;
 import com.liquidpackage.config.Config;
 
+import org.jspecify.annotations.Nullable;
+
 import net.fabricmc.fabric.api.registry.FuelValueEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
@@ -30,18 +32,31 @@ public class ItemsLib {
 
     public static class NamedItem extends Item {
         final Component baseName;
-        final Component liquidId;
+        final Identifier liquidId;
 
-        public NamedItem(Properties properties, Component baseName, Component liquidId) {
+        public NamedItem(Properties properties, Component baseName, Identifier liquidId) {
             super(properties);
 
             this.baseName = baseName;
             this.liquidId = liquidId;
         }
 
+        /**
+         * Resolved when the name is requested, not at registration: fluids of
+         * mods that initialize after this one are not registered yet by then.
+         */
         @Override
         public Component getName(ItemStack itemStack) {
-            return Component.literal(baseName.getString() + ": " + liquidId.getString());
+            Fluid fluid = BuiltInRegistries.FLUID.get(liquidId)
+                    .map(net.minecraft.core.Holder::value)
+                    .orElse(Fluids.EMPTY);
+
+            String fluidTranslatableName = fluid == Fluids.EMPTY
+                    ? "item.liquid-package.unknown_fluid"
+                    : "block." + liquidId.toLanguageKey();
+
+            return Component
+                    .literal(baseName.getString() + ": " + Component.translatable(fluidTranslatableName).getString());
         }
 
     }
@@ -77,20 +92,12 @@ public class ItemsLib {
         var bundle = genericItems[index];
 
         Identifier liquidId = Identifier.parse(LiquidPackage.CONFIG.get(index).liquidId());
-        Fluid fluid = BuiltInRegistries.FLUID.get(liquidId)
-                .map(net.minecraft.core.Holder::value)
-                .orElse(Fluids.EMPTY);
-
-        String fluidTranslatableName = fluid == Fluids.EMPTY
-                ? "item.liquid-package.unknown_fluid"
-                : "block." + liquidId.toLanguageKey();
-
         genericItems[index] = new GenericShellBundle(
                 registerItem(bundle.key(),
                         props -> new NamedItem(
                                 props.stacksTo(64),
                                 Component.translatable("item.liquid-package.packed_shell"),
-                                Component.translatable(fluidTranslatableName))),
+                                liquidId)),
                 bundle.key(),
                 liquidId,
                 bundle.index());
@@ -108,6 +115,18 @@ public class ItemsLib {
         return genericItemsMap.get(id);
     }
 
+    /**
+     * Filled shell for a configured fluid, or null if the fluid has no config
+     * entry.
+     */
+    public static @Nullable GenericShellBundle getGenericByLiquid(Identifier liquidId) {
+        for (int i = 0; i < LiquidPackage.CONFIG.size(); ++i) {
+            if (liquidId.equals(genericItems[i].liquidId()))
+                return genericItems[i];
+        }
+        return null;
+    }
+
     public static void register() {
         LiquidPackage.LOGGER.info("Registering items for {}", LiquidPackage.MOD_ID);
 
@@ -118,6 +137,15 @@ public class ItemsLib {
         FuelValueEvents.BUILD.register((builder, context) -> {
             if (LiquidPackage.CONFIG.emptyShellFuelTime() > 0) {
                 builder.add(ItemsLib.EMPTY_SHELL.item(), LiquidPackage.CONFIG.emptyShellFuelTime());
+
+                for (Config.Item cfgItem : LiquidPackage.CONFIG) {
+                    if (cfgItem.fuelTime() > 0) {
+                        var generic = getGenericByLiquid(Identifier.parse(cfgItem.liquidId()));
+                        if (generic != null) {
+                            builder.add(generic.item(), cfgItem.fuelTime());
+                        }
+                    }
+                }
             }
         });
     }

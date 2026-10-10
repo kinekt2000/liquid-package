@@ -125,7 +125,8 @@ public class FluidShellSpriteSource implements SpriteSource {
 
         /**
          * Draws the fluid under the shell: outline pixels stay opaque, the
-         * glossy body becomes translucent so the fluid shows through it.
+         * glossy body becomes translucent so the fluid shows through it. The
+         * fluid is always opaque, so every non-empty shell pixel ends up opaque.
          * Writes one animation frame of the result.
          */
         private static void compose(NativeImage shell, NativeImage fluid, FrameSize fluidFrame, int frame, int tint,
@@ -142,6 +143,8 @@ public class FluidShellSpriteSource implements SpriteSource {
                     float shellOpacity = luminance < OUTLINE_LUMINANCE
                             ? 1f
                             : BODY_MIN_OPACITY + BODY_GLOSS_OPACITY * luminance / 255f;
+                    // The shell's own translucency lets even more of the fluid through
+                    shellOpacity *= ARGB.alpha(pixel) / 255f;
 
                     int fx = x * fluidFrame.width() / w;
                     int fy = frame * fluidFrame.height() + y * fluidFrame.height() / h;
@@ -150,7 +153,7 @@ public class FluidShellSpriteSource implements SpriteSource {
                     int r = mix(ARGB.red(pixel), ARGB.red(under), shellOpacity);
                     int g = mix(ARGB.green(pixel), ARGB.green(under), shellOpacity);
                     int b = mix(ARGB.blue(pixel), ARGB.blue(under), shellOpacity);
-                    out.setPixel(x, frame * h + y, ARGB.color(ARGB.alpha(pixel), r, g, b));
+                    out.setPixel(x, frame * h + y, ARGB.color(255, r, g, b));
                 }
             }
         }

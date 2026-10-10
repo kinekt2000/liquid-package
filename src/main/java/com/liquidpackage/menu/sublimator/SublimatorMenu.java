@@ -20,6 +20,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class SublimatorMenu extends AbstractContainerMenu {
+    public static final int BUTTON_RESET = 0;
+
     private final Vector2i INPUT_BUCKET_POS = new Vector2i(26, 19);
     private final Vector2i INPUT_SHELL_POS = new Vector2i(134, 32);
     private final Vector2i OUTPUT_SHELL_POS = new Vector2i(80, 41);
@@ -90,7 +92,12 @@ public class SublimatorMenu extends AbstractContainerMenu {
         this.addSlot(new Slot(beInventory,
                 SublimatorBlockEntity.INPUT_SHELL,
                 INPUT_SHELL_POS.x(),
-                INPUT_SHELL_POS.y()));
+                INPUT_SHELL_POS.y()) {
+            @Override
+            public boolean mayPlace(ItemStack itemStack) {
+                return beInventory.canPlaceItem(SublimatorBlockEntity.INPUT_SHELL, itemStack);
+            }
+        });
 
         this.addSlot(new Slot(beInventory,
                 SublimatorBlockEntity.OUTPUT_SHELL,
@@ -126,6 +133,16 @@ public class SublimatorMenu extends AbstractContainerMenu {
         int thermometerSize = 28;
 
         return heatPercent * thermometerSize / 100;
+    }
+
+    /** Runs on the server when the client presses a button of this menu. */
+    @Override
+    public boolean clickMenuButton(Player player, int id) {
+        if (id == BUTTON_RESET && blockEntity != null) {
+            blockEntity.resetMachine();
+            return true;
+        }
+        return false;
     }
 
     @Override

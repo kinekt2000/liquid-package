@@ -1,0 +1,12 @@
+{
+    "creativemodetab.liquid-package.tabname": "Предметы Liquid Package",
+    "block.liquid-package.sublimator": "Сублиматор",
+    "item.liquid-package.empty_shell": "Пустая оболочка",
+    "item.liquid-package.packed_shell": "Упакованная оболочка",
+    "item.liquid-package.unknown_fluid": "Неизвестная жидкость",
+    "liquid-package.gui.reset": "Сброс",
+    "liquid-package.gui.reset.tooltip": "Отменяет создание и опустошает резервуар",
+    "liquid-package.jei.sublimation": "Компрессия",
+    "liquid-package.jei.time": "Занимает %s с",
+    "liquid-package.jei.heat": "Требуется источник тепла ниже"
+}

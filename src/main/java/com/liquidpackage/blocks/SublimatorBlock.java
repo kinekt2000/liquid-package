@@ -9,6 +9,7 @@ import com.mojang.serialization.MapCodec;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -58,6 +59,7 @@ public class SublimatorBlock extends BaseEntityBlock {
     }
 
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
+    private static final int LIT_LIGHT_LEVEL = 13;
     public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final EnumProperty<HeatState> HEAT_STATE = EnumProperty.create("heat_state", HeatState.class,
             HeatState.STATES);
@@ -68,7 +70,8 @@ public class SublimatorBlock extends BaseEntityBlock {
         Properties props = BlockBehaviour.Properties.of()
                 .setId(KEY)
                 .requiresCorrectToolForDrops()
-                .strength(3f);
+                .strength(3f)
+                .lightLevel(state -> state.getValue(LIT) ? LIT_LIGHT_LEVEL : 0);
         this(props);
     }
 
@@ -94,6 +97,16 @@ public class SublimatorBlock extends BaseEntityBlock {
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
         if (!state.getValue(LIT)) {
             return;
+        }
+
+        // Smoke and sparks rise from the top of the machine
+        if (random.nextFloat() < 0.4f) {
+            double x = pos.getX() + 0.25 + random.nextDouble() * 0.5;
+            double y = pos.getY() + 1.0;
+            double z = pos.getZ() + 0.25 + random.nextDouble() * 0.5;
+            level.addParticle(ParticleTypes.SMOKE, x, y, z, 0.0, 0.03, 0.0);
+            if (random.nextInt(3) == 0)
+                level.addParticle(ParticleTypes.FLAME, x, y, z, 0.0, 0.01, 0.0);
         }
         super.animateTick(state, level, pos, random);
     }
