@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_empty_shell": {
+      "conditions": {
+        "items": [
+          {
+            "items": "liquid-package:empty_shell"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "liquid-package:sublimator"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_empty_shell"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "liquid-package:sublimator"
+    ]
+  }
+}

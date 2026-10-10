@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": "minecraft:copper_bars",
+    "C": "minecraft:calcite",
+    "F": "minecraft:blast_furnace",
+    "I": "minecraft:iron_block",
+    "S": "liquid-package:empty_shell"
+  },
+  "pattern": [
+    "CSC",
+    "BFB",
+    "BIB"
+  ],
+  "result": {
+    "id": "liquid-package:sublimator"
+  }
+}

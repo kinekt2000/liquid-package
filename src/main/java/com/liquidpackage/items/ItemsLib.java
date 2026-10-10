@@ -12,7 +12,6 @@ import org.jspecify.annotations.Nullable;
 
 import net.fabricmc.fabric.api.registry.FuelValueEvents;
 import net.minecraft.core.Registry;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -82,8 +81,7 @@ public class ItemsLib {
 
     private static Item registerItem(ResourceKey<Item> key, Function<Item.Properties, Item> function) {
         Identifier id = key.identifier();
-        Properties props = new Item.Properties().setId(key).component(DataComponents.ITEM_NAME,
-                Component.literal("TEST NAME"));
+        Properties props = new Item.Properties().setId(key);
         return Registry.register(BuiltInRegistries.ITEM, id, function.apply(props));
     }
 
@@ -136,17 +134,15 @@ public class ItemsLib {
         }
 
         FuelValueEvents.BUILD.register((builder, context) -> {
-            if (LiquidPackage.CONFIG.emptyShellFuelTime() > 0) {
+            if (LiquidPackage.CONFIG.emptyShellFuelTime() > 0)
                 builder.add(ItemsLib.EMPTY_SHELL.item(), LiquidPackage.CONFIG.emptyShellFuelTime());
 
-                for (Config.Item cfgItem : LiquidPackage.CONFIG) {
-                    if (cfgItem.fuelTime() > 0) {
-                        var generic = getGenericByLiquid(Identifier.parse(cfgItem.liquidId()));
-                        if (generic != null) {
-                            builder.add(generic.item(), cfgItem.fuelTime());
-                        }
-                    }
-                }
+            for (Config.Item cfgItem : LiquidPackage.CONFIG) {
+                if (!cfgItem.isFuel())
+                    continue;
+                var generic = getGenericByLiquid(Identifier.parse(cfgItem.liquidId()));
+                if (generic != null)
+                    builder.add(generic.item(), cfgItem.fuelTime());
             }
         });
     }

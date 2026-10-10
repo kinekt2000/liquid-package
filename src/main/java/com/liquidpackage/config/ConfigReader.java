@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 package com.liquidpackage.config;
 
-import java.io.FileReader;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.liquidpackage.LiquidPackage;
 
 import net.fabricmc.loader.api.FabricLoader;
@@ -38,9 +39,14 @@ public final class ConfigReader {
     public static Config request(String fileName) {
         Path configDir = FabricLoader.getInstance().getConfigDir();
         Path configPath = configDir.resolve(fileName + ".json");
-        try (FileReader reader = new FileReader(configPath.toFile())) {
+        try (BufferedReader reader = Files.newBufferedReader(configPath)) {
 
             JsonObject rootObject = GSON.fromJson(reader, JsonObject.class);
+            if (rootObject == null) {
+                LiquidPackage.LOGGER.warn("Configuration file \"{}\" is empty. Default values will apply",
+                        configPath);
+                return Config.DEFAULT;
+            }
             JsonArray shellsArray = rootObject.getAsJsonArray("shells");
 
             Config config = new Config();
@@ -63,6 +69,11 @@ public final class ConfigReader {
         } catch (IOException e) {
             LiquidPackage.LOGGER.warn("There is no access to configuration file \"{}\". Default values will apply",
                     configPath);
+            return Config.DEFAULT;
+
+        } catch (JsonParseException | ClassCastException | IllegalStateException e) {
+            LiquidPackage.LOGGER.error("Configuration file \"{}\" is malformed ({}). Default values will apply",
+                    configPath, e.getMessage());
             return Config.DEFAULT;
         }
     }
@@ -99,7 +110,7 @@ public final class ConfigReader {
 
             return true;
         } catch (Exception e) {
-            LiquidPackage.LOGGER.warn("Unable to save configuration to \"{}\"", e.getMessage());
+            LiquidPackage.LOGGER.warn("Unable to save configuration to \"{}\": {}", configPath, e.getMessage());
             return false;
         }
     }

@@ -65,7 +65,7 @@ public class SublimatorBlock extends BaseEntityBlock {
     public static final EnumProperty<HeatState> HEAT_STATE = EnumProperty.create("heat_state", HeatState.class,
             HeatState.STATES);
 
-    private static MapCodec<SublimatorBlock> CODEC = simpleCodec(SublimatorBlock::new);
+    private static final MapCodec<SublimatorBlock> CODEC = simpleCodec(SublimatorBlock::new);
 
     public SublimatorBlock() {
         Properties props = BlockBehaviour.Properties.of()
@@ -78,9 +78,10 @@ public class SublimatorBlock extends BaseEntityBlock {
 
     public SublimatorBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(LIT, false));
-        registerDefaultState(defaultBlockState().setValue(HEAT_STATE, HeatState.COLD));
-        registerDefaultState(defaultBlockState().setValue(FACING, Direction.NORTH));
+        registerDefaultState(defaultBlockState()
+                .setValue(LIT, false)
+                .setValue(HEAT_STATE, HeatState.COLD)
+                .setValue(FACING, Direction.NORTH));
     }
 
     // STATE CONTROL
@@ -151,7 +152,7 @@ public class SublimatorBlock extends BaseEntityBlock {
 
         return createTickerHelper(type, BlockEntitiesLib.SUBLIMATOR_BE.type(),
                 (final Level level_, final BlockPos pos, final BlockState state,
-                        final SublimatorBlockEntity entity) -> entity.tick(level_, pos, blockState));
+                        final SublimatorBlockEntity entity) -> entity.tick(level_, pos, state));
 
     }
 }

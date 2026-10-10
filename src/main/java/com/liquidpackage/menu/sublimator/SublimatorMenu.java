@@ -31,13 +31,6 @@ public class SublimatorMenu extends AbstractContainerMenu {
     private final ContainerData blockStatus;
     private final Container beInventory;
 
-    // public SublimatorMenu(int containerId, Inventory playerInventory, BlockPos
-    // blockPos) {
-    // this(containerId, playerInventory,
-    // playerInventory.player.level().getBlockEntity(blockPos),
-    // new SimpleContainerData(3));
-    // }
-
     public SublimatorMenu(int containerId, Inventory playerInventory, BlockPos blockPos) {
         super(MenuLib.SUBLIMATOR_MENU, containerId);
 
@@ -68,8 +61,6 @@ public class SublimatorMenu extends AbstractContainerMenu {
     private void initMenu(Inventory playerInventory) {
 
         this.addStandardInventorySlots(playerInventory, INVENTORY_START_X, INVENTORY_START_Y);
-        // addPlayerInventory(playerInventory);
-        // addPlayerHotbar(playerInventory);
 
         this.addSlot(new Slot(beInventory,
                 SublimatorBlockEntity.INPUT_BUCKET,
@@ -148,15 +139,13 @@ public class SublimatorMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return beInventory.stillValid(player);
+        return blockEntity == null || Container.stillValidBlockEntity(blockEntity, player);
     }
 
-    // private static final int SLOT_SIZE = 18;
     private static final int INVENTORY_ROWS = 3;
     private static final int INVENTORY_COLS = 9;
     private static final int INVENTORY_START_X = 8;
     private static final int INVENTORY_START_Y = 102;
-    // private static final int INVENTORY_HOTBAR_GAP = 4;
 
     private static final int INVENTORY_SLOT_COUNT = INVENTORY_ROWS * INVENTORY_COLS;
     private static final int INVENTORY_HOTBAR_SLOT_COUNT = INVENTORY_COLS;
@@ -169,7 +158,7 @@ public class SublimatorMenu extends AbstractContainerMenu {
     public ItemStack quickMoveStack(Player player, int slotIndex) {
         Slot slot = this.slots.get(slotIndex);
 
-        if (slot == null || !slot.hasItem())
+        if (!slot.hasItem())
             return ItemStack.EMPTY;
 
         ItemStack stack = slot.getItem();
@@ -188,8 +177,8 @@ public class SublimatorMenu extends AbstractContainerMenu {
             return ItemStack.EMPTY;
         }
 
-        // If stack size == 0 (the entire stack was moved) set slot contents to null
-        if (stack.getCount() == 0) {
+        // Whole stack moved: clear the slot
+        if (stack.isEmpty()) {
             slot.set(ItemStack.EMPTY);
         } else {
             slot.setChanged();
@@ -197,24 +186,4 @@ public class SublimatorMenu extends AbstractContainerMenu {
         slot.onTake(player, stack);
         return copyOfStack;
     }
-
-    // private void addPlayerInventory(Inventory playerInventory) {
-    // for (int row = 0; row < INVENTORY_ROWS; ++row) {
-    // for (int col = 0; col < INVENTORY_COLS; ++col) {
-    // int index = col + row * INVENTORY_COLS + INVENTORY_COLS;
-    // this.addSlot(new Slot(playerInventory, index,
-    // INVENTORY_START_X + col * SLOT_SIZE,
-    // INVENTORY_START_Y + row * SLOT_SIZE));
-    // }
-    // }
-    // }
-
-    // private void addPlayerHotbar(Inventory playerInventory) {
-    // final int HOTBAR_START_Y = INVENTORY_START_Y + SLOT_SIZE * INVENTORY_ROWS +
-    // INVENTORY_HOTBAR_GAP;
-    // for (int i = 0; i < 9; ++i) {
-    // this.addSlot(new Slot(playerInventory, i, INVENTORY_START_X + i * SLOT_SIZE,
-    // HOTBAR_START_Y));
-    // }
-    // }
 }

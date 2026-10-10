@@ -23,6 +23,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -58,14 +59,6 @@ public class SublimatorBlockEntity extends BlockEntity
     public static final int INPUT_SHELL = 1;
     public static final int OUTPUT_SHELL = 2;
 
-    public static int numInputSlots() {
-        return 2;
-    }
-
-    public static int numOutputSlots() {
-        return 1;
-    }
-
     private final SimpleContainer itemInventory = new SimpleContainer(3) {
         @Override
         public void setChanged() {
@@ -75,18 +68,12 @@ public class SublimatorBlockEntity extends BlockEntity
 
         @Override
         public boolean canPlaceItem(int slot, ItemStack itemStack) {
-            if (slot == OUTPUT_SHELL) {
-                return false;
-            }
-            if (slot == INPUT_BUCKET) {
-                return getItemFluidStorage(itemStack) != null;
-            }
-            if (slot == INPUT_SHELL) {
-                return itemStack.is(ItemsLib.EMPTY_SHELL.item());
-            }
-
-            return false;
-        };
+            return switch (slot) {
+                case INPUT_BUCKET -> holdsFluid(itemStack);
+                case INPUT_SHELL -> itemStack.is(ItemsLib.EMPTY_SHELL.item());
+                default -> false;
+            };
+        }
     };
 
     private final SingleVariantStorage<FluidVariant> fluidStorage = new SingleVariantStorage<FluidVariant>() {
@@ -102,8 +89,7 @@ public class SublimatorBlockEntity extends BlockEntity
          */
         @Override
         protected boolean canInsert(FluidVariant variant) {
-            return !variant.isBlank()
-                    && ItemsLib.getGenericByLiquid(BuiltInRegistries.FLUID.getKey(variant.getFluid())) != null;
+            return isShellFluid(variant);
         }
 
         @Override
@@ -117,7 +103,7 @@ public class SublimatorBlockEntity extends BlockEntity
             if (level != null && !level.isClientSide()) {
                 level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
             }
-        };
+        }
     };
 
     private static final long TANK_CAPACITY = FluidConstants.BUCKET * 4;
@@ -169,10 +155,6 @@ public class SublimatorBlockEntity extends BlockEntity
                 return 3;
             }
         };
-    }
-
-    public BlockEntity asBlockEntity() {
-        return (BlockEntity) this;
     }
 
     // Menu
@@ -241,6 +223,7 @@ public class SublimatorBlockEntity extends BlockEntity
         output.putInt("sublimator.progress", progress);
         output.putInt("sublimator.maxProgress", maxProgress);
         output.putInt("sublimator.craftingIndex", craftingIndex);
+        output.putInt("sublimator.heatPercent", heatPercent);
 
         ContainerHelper.saveAllItems(output, this.itemInventory.getItems());
         output.store("sublimator.fluidType", FluidVariant.CODEC, this.fluidStorage.variant);
@@ -254,8 +237,8 @@ public class SublimatorBlockEntity extends BlockEntity
         progress = input.getIntOr("sublimator.progress", progress);
         maxProgress = input.getIntOr("sublimator.maxProgress", maxProgress);
         craftingIndex = input.getIntOr("sublimator.craftingIndex", -1);
+        heatPercent = input.getIntOr("sublimator.heatPercent", 0);
 
-        // ContainerHelper.loadAllItems(input, in ventory);
         ContainerHelper.loadAllItems(input, this.itemInventory.getItems());
         this.fluidStorage.variant = input.read("sublimator.fluidType", FluidVariant.CODEC)
                 .orElse(this.fluidStorage.variant);
@@ -269,10 +252,7 @@ public class SublimatorBlockEntity extends BlockEntity
     public void tick(Level level, BlockPos pos, BlockState state) {
         ItemStack bucketStack = itemInventory.getItem(INPUT_BUCKET);
 
-        var itemStorage = getItemFluidStorage(bucketStack);
-        if (itemStorage != null) {
-            emptyFluidContainer(itemStorage, bucketStack);
-        }
+        emptyFluidContainer(bucketStack);
 
         if (isBurningBlockBelow())
             increaseHeat();
@@ -330,48 +310,49 @@ public class SublimatorBlockEntity extends BlockEntity
                 || blockBelowState.is(Blocks.LAVA_CAULDRON);
     }
 
-    private Storage<FluidVariant> getItemFluidStorage(ItemStack item) {
+    /** The first non-empty fluid view of an item, or null if it holds no fluid. */
+    private static @Nullable StorageView<FluidVariant> filledView(ItemStack item) {
         Storage<FluidVariant> itemFluidStorage = FluidStorage.ITEM.find(item, ContainerItemContext.withConstant(item));
-        if (itemFluidStorage != null) {
-            var viewOptional = itemFluidStorage.iterator().hasNext() ? itemFluidStorage.iterator().next() : null;
-            if (viewOptional != null && !viewOptional.isResourceBlank()) {
-                return itemFluidStorage;
-            }
+        if (itemFluidStorage == null)
+            return null;
+        for (StorageView<FluidVariant> view : itemFluidStorage) {
+            if (!view.isResourceBlank())
+                return view;
         }
         return null;
     }
 
-    private void emptyFluidContainer(Storage<FluidVariant> ItemFluidStorage, ItemStack itemStack) {
-        if (ItemFluidStorage != null) {
-            var viewOptional = ItemFluidStorage.iterator().hasNext() ? ItemFluidStorage.iterator().next() : null;
+    private static boolean isShellFluid(FluidVariant variant) {
+        return !variant.isBlank()
+                && ItemsLib.getGenericByLiquid(BuiltInRegistries.FLUID.getKey(variant.getFluid())) != null;
+    }
 
-            if (viewOptional != null && !viewOptional.isResourceBlank()) {
-                FluidVariant fluidInBucket = viewOptional.getResource();
-                long amountInBucket = viewOptional.getAmount(); // Для ванильного ведра это 81000 (1 ведро)
+    /** True for containers that hold a fluid the machine can turn into a shell. */
+    private static boolean holdsFluid(ItemStack item) {
+        StorageView<FluidVariant> view = filledView(item);
+        return view != null && isShellFluid(view.getResource());
+    }
 
-                if ((fluidStorage.variant.isBlank() || fluidStorage.variant.equals(fluidInBucket))
-                        && (fluidStorage.getCapacity() - fluidStorage.amount >= amountInBucket)) {
+    /** Pours a filled container into the tank and leaves its remainder (e.g. an empty bucket). */
+    private void emptyFluidContainer(ItemStack itemStack) {
+        StorageView<FluidVariant> view = filledView(itemStack);
+        if (view == null)
+            return;
 
-                    LiquidPackage.LOGGER.warn("Before pour: {} {} units", fluidStorage.variant.toString(),
-                            fluidStorage.amount);
+        FluidVariant fluidInBucket = view.getResource();
+        long amountInBucket = view.getAmount();
 
-                    fluidStorage.variant = fluidInBucket;
-                    fluidStorage.amount += amountInBucket;
+        if (!isShellFluid(fluidInBucket)
+                || !(fluidStorage.variant.isBlank() || fluidStorage.variant.equals(fluidInBucket))
+                || fluidStorage.getCapacity() - fluidStorage.amount < amountInBucket)
+            return;
 
-                    LiquidPackage.LOGGER.warn("After pour: {} {} units", fluidStorage.variant.toString(),
-                            fluidStorage.amount);
+        fluidStorage.variant = fluidInBucket;
+        fluidStorage.amount += amountInBucket;
 
-                    var remainder = itemStack.getItem().getCraftingRemainder();
-                    if (remainder != null) {
-                        itemInventory.setItem(INPUT_BUCKET, remainder.create());
-                    } else {
-                        itemInventory.clearContent();
-                    }
-
-                    setChanged();
-                }
-            }
-        }
+        var remainder = itemStack.getItem().getCraftingRemainder();
+        itemInventory.setItem(INPUT_BUCKET, remainder != null ? remainder.create() : ItemStack.EMPTY);
+        setChanged();
     }
 
     private static int bucketsOf(GenericShellBundle recipe) {
@@ -470,7 +451,7 @@ public class SublimatorBlockEntity extends BlockEntity
     @Override
     public void setChanged() {
         super.setChanged();
-        if (!level.isClientSide()) {
+        if (level != null && !level.isClientSide()) {
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
     }

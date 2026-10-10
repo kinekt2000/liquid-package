@@ -12,8 +12,8 @@ Mod adds Sublimator block and Empty Shell item. Configure you mod, pour some flu
 ## Installation
 
 1. Install [Fabric Loader](https://fabricmc.net/)
-2. Install the matching [Fabric API](https://modrinth.com/mod/fabric-api)
-3. Drop the built `liquid-package-*.jar` into your `mods/` (both server and client)
+2. Install matching [Fabric API](https://modrinth.com/mod/fabric-api)
+3. Drop `liquid-package-*.jar` into your `mods/` (both server and client)
 4. Launch the game or server once to generate the default config at
    `config\liquid-package.json`
 

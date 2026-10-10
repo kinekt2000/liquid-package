@@ -7,9 +7,9 @@ import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootSubProvider;
 import net.minecraft.core.HolderLookup.Provider;
 
-public class LootProvider extends FabricBlockLootSubProvider {
+public class LPBlockLootProvider extends FabricBlockLootSubProvider {
 
-    protected LootProvider(FabricPackOutput packOutput, CompletableFuture<Provider> registriesFuture) {
+    public LPBlockLootProvider(FabricPackOutput packOutput, CompletableFuture<Provider> registriesFuture) {
         super(packOutput, registriesFuture);
     }
 

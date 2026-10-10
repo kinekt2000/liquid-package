@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "#minecraft:coals"
+  ],
+  "result": {
+    "id": "liquid-package:empty_shell"
+  }
+}

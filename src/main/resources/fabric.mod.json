@@ -28,7 +28,6 @@
 			"com.liquidpackage.client.rei.LiquidPackageReiPlugin"
 		],
 		"fabric-datagen": [
-			"com.liquidpackage.LiquidPackageDataGen",
 			"com.liquidpackage.client.LiquidPackageDataGenClient"
 		]
 	},

@@ -11,7 +11,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.tags.BlockTags;
 
-public class TagsProvider {
+public class LPTagsProvider {
     public static class Blocks extends FabricTagsProvider.BlockTagsProvider {
 
         public Blocks(FabricPackOutput output, CompletableFuture<Provider> registryLookupFuture) {
