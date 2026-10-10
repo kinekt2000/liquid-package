@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.client.menu;
 
 import net.minecraft.client.Minecraft;

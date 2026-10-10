@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.client.texture;
 
 import java.io.IOException;

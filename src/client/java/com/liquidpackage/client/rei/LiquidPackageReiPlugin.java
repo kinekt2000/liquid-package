@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.client.rei;
 
 import com.liquidpackage.blocks.BlocksLib;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.creative;
 
 import com.liquidpackage.LiquidPackage;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.client.jei;
 
 import java.util.ArrayList;

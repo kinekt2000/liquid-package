@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.client.menu;
 
 import org.joml.Matrix3x2fStack;

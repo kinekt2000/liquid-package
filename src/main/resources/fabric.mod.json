@@ -3,15 +3,15 @@
 	"id": "liquid-package",
 	"version": "${version}",
 	"name": "Liquid Package",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Adds Sublimator block and Empty/Packed Shell items to store liquid (mostly fuel) as solid fuel",
 	"authors": [
-		"Me!"
+		"John C. Alastor"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://modrinth.com/user/kinekt2000",
+		"sources": "https://github.com/kinekt2000/liquid-package"
 	},
-	"license": "CC0-1.0",
+	"license": "MIT",
 	"icon": "assets/liquid-package/icon.png",
 	"environment": "*",
 	"entrypoints": {

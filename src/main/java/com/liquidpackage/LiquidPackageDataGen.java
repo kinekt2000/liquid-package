@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage;
 
 import com.liquidpackage.datagen.TagsProvider;

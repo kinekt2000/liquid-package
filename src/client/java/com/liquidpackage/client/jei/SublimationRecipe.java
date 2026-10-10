@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.client.jei;
 
 import net.minecraft.world.item.ItemStack;

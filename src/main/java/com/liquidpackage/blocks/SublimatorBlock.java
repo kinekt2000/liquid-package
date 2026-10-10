@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.blocks;
 
 import org.jspecify.annotations.Nullable;

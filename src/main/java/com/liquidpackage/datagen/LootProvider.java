@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.datagen;
 
 import java.util.concurrent.CompletableFuture;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.blockEntity.container.iface;
 
 public enum ContainerDataEnum {

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.menu.sublimator;
 
 import org.joml.Vector2i;

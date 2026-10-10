@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.data;
 
 import com.liquidpackage.LiquidPackage;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package com.liquidpackage.client;
 
 import com.liquidpackage.client.datagen.GenModelProvider;
